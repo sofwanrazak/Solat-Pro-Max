@@ -1,0 +1,17 @@
+{
+  "name": "Solat Pro Max",
+  "short_name": "Solat Pro",
+  "description": "Learn to pray solat correctly: animated postures, every doa and surah with meaning, quizzes, streaks and a prayer tracker.",
+  "start_url": "./index.html#learn",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#edf1ef",
+  "theme_color": "#0e6e66",
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
