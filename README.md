@@ -19,15 +19,20 @@ The app is the main product. The PDF is generated from **the same content files*
 
 ## What is inside
 
-- **Learn**: 14 lessons in 4 units, from *why solat matters* to *khushu'*. 63 questions in 4 formats: multiple choice, true/false, put in order, pillar-or-sunnah sorting.
+- **Learn**: 14 lessons in 4 units, from *why solat matters* to *khushu'*. 65 questions in 4 formats: multiple choice, true/false, put in order, pillar-or-sunnah sorting.
 - **Pray along**: a step-by-step guide for each of the 5 prayers (22 to 35 steps), built from the rakaat count. It covers qunut in Subuh, the first Tashahhud, and the brief rest before standing (jalsah istirahah). Every step shows the animated posture, the tag (pillar / sunnah ab'adh / sunnah), what to say, body cues, mistakes to avoid, and whether to recite aloud or silently.
-- **Doa**: 28 doas and dhikr, filtered by when they're used: in prayer, after prayer, wudhu, special.
-- **Surah**: Al-Fatihah and 11 short surahs in mushaf order, with verse-by-verse recitation (al-Husary) that highlights each verse as it plays.
-- Both collections give every item Arabic with full vowel marks, transliteration, meaning and source, plus a memorise mode that hides more words each round and self-rated mastery stars.
+- **Doa and Wirid**: 33 entries in 5 categories: in prayer, **wirid** (remembrance after salam), **doa after prayer** (short and long versions), wudhu, special.
+- **Wirid player**: step-by-step wirid with a tap counter, ending with the doa.
+  - **Short** (about 3 minutes): what is reported in the hadith.
+  - **Long** (about 8 minutes): as recited in Malaysian mosques.
+  - It adjusts to the prayer: tahlil ×10 and *Allāhumma ajirnā* ×7 after Subuh and Maghrib.
+  - Finishing Pray along leads straight into it.
+- **Surah**: Al-Fatihah and 22 short surahs (Juz' 'Amma, 87–114 selection) in mushaf order. Includes verse-by-verse recitation (al-Husary) and a **Recommended in prayer** guide listing what the Prophet ﷺ recited in the Subuh sunnah, Maghrib sunnah, Witr, Jumu'ah/Eid and Isyak, each with its source. Pray along has a picker for all 22 surahs.
+- Both collections give every item Arabic with full vowel marks, transliteration, meaning and source, plus a memorise mode and self-rated mastery stars.
 - **Handbook**: times and rakaat, conditions, the 13 pillars, sunnah ab'adh and hai'ah, wudhu, what breaks wudhu and the prayer, sujud sahwi, the 12 common mistakes, 10 khushu' habits, notes for women, and a transliteration key.
-- **Track**: log each prayer (prayed / on time / jama'ah), a 12-week heatmap, a tasbih counter (33·33·33·1) with haptics, and 14 badges.
+- **Track**: log each prayer (prayed / on time / jama'ah), a 12-week heatmap, a tasbih counter (33·33·33·1) with haptics, and 15 badges.
 - **Posture figures**: a side-view man in baju melayu and kopiah, facing the qiblah, drawn with real proportions (about 7.4 heads tall). Poses use inverse kinematics, so limbs keep their length while animating. Teaching overlays show where to look in qiyam, the flat back in ruku', the 7 contact points in sujud, the raised finger in Tashahhud, and the turn of the salam.
-- **Printable guide**: [`dist/solat-pro-max-guide.pdf`](dist/solat-pro-max-guide.pdf), 41 A5 pages, ending with a 30-day paper tracker.
+- **Printable guide**: [`dist/solat-pro-max-guide.pdf`](dist/solat-pro-max-guide.pdf), 63 A5 pages, ending with a 30-day paper tracker.
 
 ## Run it
 
@@ -70,7 +75,7 @@ Edit content in `assets/data.js` only; the app and the PDF both read from it.
 
 - Arabic uses simplified (imla'i) spelling with full vowel marks. Recitation follows Hafs 'an 'Asim.
 - Hadith references use sunnah.com numbering. Each doa shows its source.
-- Where a wording comes from scholarly practice rather than a hadith (for example the closing lines of the qunut, or the tasbih of sujud sahwi), the app says so.
+- Where a wording comes from scholarly or local practice rather than a hadith, the app says so, and it flags weak chains. Examples: the closing lines of the qunut, the tasbih of sujud sahwi, Al-Fatihah in the wirid, *Allāhumma ajirnā* (Abu Dawud 5079), and parts of the long doa.
 - **Before wide distribution, have a qualified ustaz review `assets/data.js`.** It is a single file written to make that review easy.
 
 ## Privacy and security

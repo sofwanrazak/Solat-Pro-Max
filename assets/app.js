@@ -214,6 +214,17 @@
   function duaBlock(d, opts) {
     opts = opts || {};
     const lvl = opts.cloze || 0;
+    if (d.parts) {
+      return h('div', { class: 'dua' },
+        opts.head !== false && h('div', { class: 'dua-head' }, h('h3', null, d.title), h('span', { class: 'count' }, d.parts.length + ' parts')),
+        d.note && opts.note !== false && h('p', { class: 'note' }, d.note),
+        h('ol', { class: 'parts' }, d.parts.map((pt, k) => h('li', { class: 'part' },
+          h('span', { class: 'eyebrow' }, pt.label),
+          h('p', { class: 'ar', lang: 'ar' }, clozeText(pt.ar, lvl, k)),
+          h('p', { class: 'tr' }, pt.tr),
+          h('p', { class: 'en' }, pt.en),
+          pt.src && h('p', { class: 'src' }, 'Source: ' + pt.src)))));
+    }
     return h('div', { class: 'dua' },
       opts.head !== false && h('div', { class: 'dua-head' }, h('h3', null, d.title), d.count && h('span', { class: 'count' }, '×' + d.count)),
       h('p', { class: 'ar' + (d.audio ? ' quran' : ''), lang: 'ar' }, clozeText(d.ar, lvl, 0)),
@@ -266,7 +277,7 @@
   const VIEWS = [
     { id: 'learn', label: 'Learn', icon: 'learn' },
     { id: 'pray', label: 'Pray', icon: 'pray' },
-    { id: 'doa', label: 'Doa', icon: 'doa' },
+    { id: 'doa', label: 'Doa and Wirid', icon: 'doa' },
     { id: 'surah', label: 'Surah', icon: 'surah' },
     { id: 'handbook', label: 'Handbook', icon: 'handbook' },
     { id: 'track', label: 'Track', icon: 'track' },
@@ -605,7 +616,10 @@
         const sr = surahById(choice);
         const box = h('div', null, surahBlock(sr));
         parts.push(h('div', { class: 'say' },
-          h('div', { class: 'surah-pick', role: 'group', 'aria-label': 'Choose a surah' }, D.surahs.filter((x) => !x.rukun).map((x) => h('button', { class: 'chip', type: 'button', 'aria-pressed': String(x.id === choice), onclick: () => { pray.surah[s.r] = x.id; go(pray.idx, true); } }, x.name))),
+          h('label', { class: 'surah-pick' }, h('span', { class: 'eyebrow' }, 'Choose a surah'),
+            h('select', { id: 'surah-pick-' + s.r, onchange: (e) => { pray.surah[s.r] = e.target.value; go(pray.idx, true); } },
+              D.surahs.filter((x) => !x.rukun).sort((a, b) => a.n - b.n).map((x) => { const o = h('option', { value: x.id }, x.n + ' · ' + x.name + ' (' + x.ayat.length + ' verses)'); o.selected = x.id === choice; return o; }))),
+          pairHint(p, s.r),
           h('div', { class: 'dua-head' }, h('h3', null, sr.name + ' · ' + sr.meaning), listenButton(sr, box)), box));
       }
       (st.after || []).forEach((id) => parts.push(sayBlock(duaById(id))));
@@ -624,9 +638,9 @@
       S.guided++;
       addXP(25);
       award('guided');
-      toast(p.name + ' complete. +25 XP. Now the dhikr.', 'star');
+      toast(p.name + ' complete. +25 XP. Now the wirid.', 'star');
       pray.idx = 0;
-      location.hash = '#track';
+      openWirid(null, p.id);
     }
     const onKey = (e) => {
       if (current !== 'pray' || $('.sheet')) return;
@@ -638,10 +652,123 @@
     go(pray.idx, true);
   }
 
+  // ---------- WIRID ----------
+  const surahName = (id) => { const x = surahById(id); return x ? x.name : id; };
+  function pairHint(p, r) {
+    const tips = { maghrib: 'Short surahs suit Maghrib.', isyak: 'Al-A’la or Ad-Duha suit Isyak (Muslim 465).', subuh: 'Subuh is the longest recitation of the day; on Friday the sunnah is As-Sajdah and Al-Insan.' };
+    return tips[p.id] && r === 1 ? h('p', { class: 'src' }, tips[p.id]) : null;
+  }
+  function pairingPanel(onPick) {
+    return h('section', { class: 'panel pairs' },
+      h('div', { class: 'dua-head' }, h('h3', null, 'Recommended in prayer'), h('span', { class: 'src' }, 'What the Prophet ﷺ recited')),
+      h('ul', { class: 'pair-list' }, D.pairings.map((pr) => h('li', null,
+        h('b', null, pr.t),
+        h('span', { class: 'pair-surahs' }, pr.r.length ? pr.r.map((x, k) => h('span', { class: 'pair-r' }, h('em', null, 'R' + (k + 1)), (Array.isArray(x) ? x : [x]).map((id) => h('button', { class: 'chip', type: 'button', onclick: () => onPick(id) }, surahName(id))))) : null),
+        pr.note && h('span', { class: 'muted' }, pr.note),
+        h('span', { class: 'src' }, pr.src)))));
+  }
+  function wiridLauncher() {
+    return h('section', { class: 'panel wirid-launch' },
+      h('div', null, h('span', { class: 'eyebrow' }, 'After every fard prayer'), h('h3', null, 'Wirid and doa, counted for you')),
+      h('p', { class: 'muted' }, 'Step through the wirid with a counter, then the doa. Short: what is reported in the hadith (about 3 minutes). Long: as recited in Malaysian mosques (about 8 minutes).'),
+      h('div', { class: 'actions' },
+        h('button', { class: 'btn primary', type: 'button', onclick: () => openWirid('short') }, 'Short wirid'),
+        h('button', { class: 'btn', type: 'button', onclick: () => openWirid('long') }, 'Long wirid')));
+  }
+  function openWirid(kind, pid) {
+    stopAudio();
+    pid = pid || skyPrayer[skyNow()];
+    let items = [], i = 0, n = 0;
+    const prog = h('i');
+    const body = h('div', { class: 'sheet-body' });
+    const foot = h('div', { class: 'sheet-foot' });
+    const close = () => { stopAudio(); sheet.remove(); document.removeEventListener('keydown', onKey); };
+    const sheet = h('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Wirid and doa' },
+      h('div', { class: 'sheet-top' }, h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Close wirid', onclick: close }, icon('x')), h('div', { class: 'progress' }, prog)),
+      body, foot);
+    document.body.append(sheet);
+    function onKey(e) {
+      if (e.key === 'Escape') close();
+      if ((e.key === ' ' || e.key === 'Enter') && items.length && document.activeElement.tagName !== 'BUTTON') { e.preventDefault(); tap(); }
+    }
+    document.addEventListener('keydown', onKey);
+    const footRow = (...kids) => foot.replaceChildren(h('div', { class: 'row' }, kids));
+
+    function chooser() {
+      prog.style.width = '0%';
+      const state = { kind: kind || 'short', pid };
+      const draw = () => {
+        const list = D.wirid(state.kind, state.pid);
+        body.replaceChildren(h('div', { class: 'sheet-inner' },
+          h('span', { class: 'eyebrow' }, 'Wirid & doa after prayer'),
+          h('h2', { style: { fontSize: '1.8rem' } }, 'Seal your prayer'),
+          h('div', { class: 'chips', role: 'group', 'aria-label': 'Length' }, [['short', 'Short · ~3 min'], ['long', 'Long · ~8 min']].map(([v, l]) => h('button', { class: 'chip', type: 'button', 'aria-pressed': String(state.kind === v), onclick: () => { state.kind = v; draw(); } }, l))),
+          h('div', { class: 'chips', role: 'group', 'aria-label': 'After which prayer' }, D.prayers.map((x) => h('button', { class: 'chip', type: 'button', 'aria-pressed': String(state.pid === x.id), onclick: () => { state.pid = x.id; draw(); } }, x.name))),
+          h('ol', { class: 'wirid-list' }, list.map((it) => { const d = it.id ? duaById(it.id) : null; return h('li', null, h('span', null, d ? d.title : surahName(it.surah)), it.count > 1 && h('span', { class: 'count' }, '×' + it.count)); })),
+          h('p', { class: 'foot-note' }, state.kind === 'long' ? 'Long wirid follows common Malaysian practice. Items not from a specific hadith are marked as such.' : 'Short wirid keeps to what is reported in the hadith.')));
+        footRow(h('span', { class: 'muted' }, list.length + ' steps'), h('button', { class: 'btn primary', type: 'button', onclick: () => { items = list; i = 0; n = 0; step(); } }, 'Begin', icon('right')));
+      };
+      draw();
+    }
+    function cur() { return items[i]; }
+    function step() {
+      const it = cur();
+      const max = it.count || 1;
+      prog.style.width = (i / items.length) * 100 + '%';
+      let content;
+      if (it.surah) {
+        const sr = surahById(it.surah);
+        const box = h('div', null, surahBlock(sr, { tips: false }));
+        content = h('div', { class: 'panel' }, h('div', { class: 'dua-head' }, h('h3', null, sr.name), listenButton(sr, box)), it.note && h('p', { class: 'note' }, it.note), box);
+      } else {
+        const d = duaById(it.id);
+        const b = d.audio ? h('button', { class: 'btn small', type: 'button' }, icon('sound'), 'Listen') : null;
+        if (b) b.addEventListener('click', () => playAyat(d.audio[0], d.audio[1], d.audio[2], null, b));
+        content = h('div', { class: 'panel' }, b && h('div', { class: 'actions' }, b), duaBlock(Object.assign({}, d, { count: it.count || d.count })));
+      }
+      body.scrollTop = 0;
+      body.replaceChildren(h('div', { class: 'sheet-inner' }, h('span', { class: 'eyebrow' }, 'Step ' + (i + 1) + ' of ' + items.length), content));
+      if (max > 1) {
+        const C = 2 * Math.PI * 22;
+        const btn = h('button', { class: 'counter', type: 'button', 'aria-label': 'Count, ' + n + ' of ' + max, onclick: tap });
+        btn.innerHTML = '<svg viewBox="0 0 52 52" aria-hidden="true"><circle class="track" cx="26" cy="26" r="22"/><circle class="val" cx="26" cy="26" r="22" stroke-dasharray="' + C.toFixed(1) + '" stroke-dashoffset="' + (C * (1 - n / max)).toFixed(1) + '"/></svg>';
+        append(btn, [h('span', { class: 'counter-n' }, n), h('span', { class: 'counter-of' }, '/' + max)]);
+        footRow(h('button', { class: 'btn ghost small', type: 'button', onclick: back, disabled: i === 0 }, icon('left'), 'Back'), h('span', { class: 'muted counter-hint' }, 'Tap to count'), btn);
+        btn.focus({ preventScroll: true });
+      } else {
+        footRow(h('button', { class: 'btn ghost small', type: 'button', onclick: back, disabled: i === 0 }, icon('left'), 'Back'), h('button', { class: 'btn primary', type: 'button', onclick: next }, i === items.length - 1 ? 'Ameen, finish' : 'Done', icon(i === items.length - 1 ? 'check' : 'right')));
+      }
+    }
+    function tap() {
+      const it = cur();
+      if (!it) return;
+      const max = it.count || 1;
+      if (max <= 1) { next(); return; }
+      n++;
+      try { if (navigator.vibrate) navigator.vibrate(n >= max ? [30, 40, 30] : 8); } catch (e) { /* no haptics */ }
+      if (n >= max) next(); else step();
+    }
+    function back() { if (i > 0) { stopAudio(); i--; n = 0; step(); } }
+    function next() {
+      stopAudio();
+      n = 0;
+      if (i < items.length - 1) { i++; step(); return; }
+      prog.style.width = '100%';
+      addXP(15);
+      award('wirid');
+      body.replaceChildren(h('div', { class: 'sheet-inner' }, h('div', { class: 'result' },
+        h('h2', null, 'Taqabbalallāhu minnā wa minkum.'),
+        h('p', { class: 'muted' }, 'May Allah accept from us and from you.'),
+        h('div', { class: 'xp-big' }, '+15 XP'))));
+      footRow(h('span'), h('button', { class: 'btn primary', type: 'button', onclick: close }, 'Close'));
+    }
+    if (kind) { items = D.wirid(kind, pid); chooser(); } else chooser();
+  }
+
   // ---------- LIBRARY ----------
   const lib = { doa: { q: '', cat: 'All' }, surah: { q: '' }, cloze: {} };
   const LIB = {
-    doa: { eyebrow: 'Doa collection', title: 'Every doa and dhikr of the prayer', search: 'Search: sujud, forgiveness, qunut…', cats: ['All', 'In prayer', 'After prayer', 'Wudhu', 'Special'] },
+    doa: { eyebrow: 'Doa and wirid', title: 'Doa, wirid and dhikr', search: 'Search: sujud, forgiveness, qunut, kursi…', cats: ['All', 'In prayer', 'Wirid', 'Doa after prayer', 'Wudhu', 'Special'] },
     surah: { eyebrow: 'Surah collection', title: 'Al-Fatihah and the short surahs', search: 'Search: ikhlas, falaq, mercy…', cats: null },
   };
   function viewLibrary(col, kind) {
@@ -649,7 +776,7 @@
     const st = lib[kind];
     const items = kind === 'surah'
       ? D.surahs.slice().sort((a, b) => a.n - b.n).map((s) => ({ id: 's-' + s.id, kind: 'surah', title: s.name, sub: 'Surah ' + s.n + ' · ' + s.meaning + ' · ' + s.ayat.length + ' verses' + (s.rukun ? ' · a pillar of every rakaat' : ''), ar: s.ayat[0].ar, data: s, hay: (s.name + ' ' + s.meaning + ' ' + s.n + ' ' + s.ayat.map((a) => a.tr + ' ' + a.en).join(' ')).toLowerCase() }))
-      : D.duas.map((d) => ({ id: 'd-' + d.id, kind: 'dua', cat: d.cat, title: d.title, sub: d.cat + (d.count ? ' · ×' + d.count : ''), ar: d.ar, data: d, hay: (d.title + ' ' + d.tr + ' ' + d.en + ' ' + d.cat).toLowerCase() }));
+      : D.duas.map((d) => ({ id: 'd-' + d.id, kind: 'dua', cat: d.cat, title: d.title, sub: d.cat + (d.count ? ' · ×' + d.count : '') + (d.parts ? ' · ' + d.parts.length + ' parts' : ''), ar: d.ar || d.parts[0].ar, data: d, hay: (d.title + ' ' + d.cat + ' ' + (d.parts ? d.parts.map((x) => x.label + ' ' + x.tr + ' ' + x.en).join(' ') : d.tr + ' ' + d.en)).toLowerCase() }));
     const listEl = h('div', { class: 'lib' });
     const search = h('input', { id: 'lib-search-' + kind, type: 'search', placeholder: cfg.search, value: st.q, 'aria-label': 'Search the ' + kind + ' collection', oninput: (e) => { st.q = e.target.value; draw(); } });
     const chips = cfg.cats && h('div', { class: 'chips', role: 'group', 'aria-label': 'Filter' });
@@ -665,6 +792,10 @@
       h('p', { class: 'foot-note' }, kind === 'surah'
         ? 'Recite Al-Fatihah in every rakaat, then any surah in the 1st and 2nd. Listen verse by verse; memorise: each tap hides more words. Three stars means you have it by heart.'
         : 'Memorise: each tap hides more words; tap a blank to check yourself. Rate yourself with the stars; three stars means you have it by heart.'),
+      kind === 'doa' ? wiridLauncher() : pairingPanel((id) => {
+        const det = listEl.querySelector('[data-id="s-' + id + '"]');
+        if (det) { det.open = true; det.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+      }),
       listEl);
 
     function stars(id) {
@@ -695,7 +826,7 @@
       const shown = items.filter((it) => (!cfg.cats || st.cat === 'All' || it.cat === st.cat) && (!q || it.hay.includes(q)));
       listEl.replaceChildren(...(shown.length ? shown.map((it) => {
         const wrap = h('div');
-        const det = h('details', { class: 'lib-item' },
+        const det = h('details', { class: 'lib-item', 'data-id': it.id },
           h('summary', null, h('span', { class: 'lib-title' }, h('b', null, it.title), h('small', null, it.sub), stars(it.id)), h('span', { class: 'ar', lang: 'ar' }, it.ar.split(' ').slice(0, 4).join(' '))),
           wrap);
         det.addEventListener('toggle', () => { if (det.open && !wrap.firstChild) wrap.append(itemBody(it, wrap)); if (!det.open) stopAudio(); });
@@ -709,7 +840,7 @@
   function viewHandbook(col) {
     const secs = [
       ['glance', 'At a glance'], ['times', 'Times & rakaat'], ['syarat', 'Conditions'], ['rukun', '13 pillars'], ['sunnah', 'Sunnah'],
-      ['wudhu', 'Wudhu'], ['batal', 'What breaks solat'], ['sahwi', 'Sujud sahwi'], ['mistakes', 'Mistakes'], ['khushu', 'Khushu’'], ['women', 'Women'], ['key', 'Reading guide'], ['about', 'Sources'],
+      ['wudhu', 'Wudhu'], ['batal', 'What breaks solat'], ['sahwi', 'Sujud sahwi'], ['mistakes', 'Mistakes'], ['khushu', 'Khushu’'], ['wirid', 'Wirid & doa'], ['women', 'Women'], ['key', 'Reading guide'], ['about', 'Sources'],
     ];
     const strip = h('div', { class: 'strip' }, D.timeline.map((t) => { const f = h('figure', null); SolatFigure.create(f, { pose: t.pose, label: t.t }); f.append(h('figcaption', null, t.t)); return f; }));
     const sec = (id, title, ...kids) => h('section', { id: 'hb-' + id }, h('h2', null, title), kids);
@@ -738,6 +869,10 @@
           h('div', { class: 'panel' }, h('h3', null, 'How'), h('ol', { class: 'list' }, D.sahwi.how.map((x) => h('li', null, x))), h('p', { class: 'note' }, D.sahwi.rukunNote), duaBlock(duaById('sahwi'), { note: true })))),
         sec('mistakes', 'The 12 common mistakes', h('div', { style: { display: 'grid', gap: '10px' } }, mistakeList())),
         sec('khushu', 'Khushu’: presence of heart', h('div', { class: 'grid2' }, D.khushu.map((k, n) => h('div', { class: 'panel' }, h('span', { class: 'eyebrow' }, 'Habit ' + (n + 1)), h('h3', null, k.t), h('p', { class: 'muted' }, k.d))))),
+        sec('wirid', 'Wirid and doa after prayer', h('div', { class: 'grid2' },
+          h('div', { class: 'panel' }, h('h3', null, 'Short wirid'), h('p', { class: 'muted' }, 'What is reported in the hadith, about 3 minutes.'), h('ol', { class: 'list' }, D.wirid('short', 'zohor').map((it) => h('li', null, it.id ? duaById(it.id).title : surahName(it.surah), it.count > 1 ? ' ×' + it.count : '')))),
+          h('div', { class: 'panel' }, h('h3', null, 'Long wirid'), h('p', { class: 'muted' }, 'As recited in Malaysian mosques, about 8 minutes. Shown for Subuh and Maghrib; after other prayers, tahlil ×3 and no “ajirnā”.'), h('ol', { class: 'list' }, D.wirid('long', 'subuh').map((it) => h('li', null, it.id ? duaById(it.id).title : surahName(it.surah), it.count > 1 ? ' ×' + it.count : ''))))),
+          wiridLauncher()),
         sec('women', 'Notes for women', h('div', { class: 'panel' }, h('ul', { class: 'list' }, D.women.map((x) => h('li', null, x))))),
         sec('key', 'How to read the transliteration', h('div', { class: 'key' },
           [['ح', 'ḥ', 'deep throat h'], ['ه', 'h', 'light h'], ['ع', 'ʿ', 'throat stop'], ['ء', '\'', 'glottal stop'], ['ص', 'ṣ', 'heavy s'], ['ض', 'ḍ', 'heavy d'], ['ط', 'ṭ', 'heavy t'], ['ظ', 'ẓ', 'heavy dh'], ['ذ', 'dh', 'as in “this”'], ['ث', 'th', 'as in “think”'], ['خ', 'kh', 'rasping kh'], ['غ', 'gh', 'gargled g'], ['ق', 'q', 'deep k'], ['ā ī ū', '—', 'long vowels, held 2 counts']].map(([a, b, c]) => h('div', null, h('b', { lang: 'ar' }, a), h('strong', null, b), h('br'), h('span', { class: 'muted' }, c)))),
@@ -826,7 +961,7 @@
         h('p', { class: 'ar', lang: 'ar', style: { textAlign: 'center', fontSize: ph.id === 'tahlil' ? '1.4rem' : '2.2rem', lineHeight: '1.8' } }, d.ar),
         h('p', { class: 'tr' }, d.tr), h('p', { class: 'en', style: { maxWidth: '44ch' } }, d.en),
         tb,
-        h('div', { class: 'actions' }, h('button', { class: 'btn small ghost', type: 'button', onclick: () => { tas.phase = 0; tas.n = 0; route(); } }, 'Restart'), h('span', { class: 'src', style: { alignSelf: 'center' } }, 'Muslim 597 · completed ' + S.tasbih + '×'))),
+        h('div', { class: 'actions' }, h('button', { class: 'btn small primary', type: 'button', onclick: () => openWirid(null) }, 'Full wirid & doa', icon('right')), h('button', { class: 'btn small ghost', type: 'button', onclick: () => { tas.phase = 0; tas.n = 0; route(); } }, 'Restart'), h('span', { class: 'src', style: { alignSelf: 'center' } }, 'Muslim 597 · completed ' + S.tasbih + '×'))),
       h('section', { style: { display: 'grid', gap: '12px' } }, h('h3', null, 'Badges · ' + S.badges.length + ' of ' + D.badges.length),
         h('div', { class: 'badges' }, D.badges.map((b) => { const got = S.badges.includes(b.id); return h('div', { class: 'badge' + (got ? '' : ' locked') }, medal(got), h('b', null, b.t), h('small', null, b.d)); }))),
       h('section', { class: 'panel' }, h('h3', null, 'Settings'),

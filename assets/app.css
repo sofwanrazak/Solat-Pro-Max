@@ -29,7 +29,7 @@
   --fig-mat: color-mix(in oklab, var(--accent) 26%, transparent);
 
   --f-display: 'El Messiri', 'Gill Sans', 'Trebuchet MS', sans-serif;
-  --f-body: 'Atkinson Hyperlegible', 'Segoe UI', system-ui, sans-serif;
+  --f-body: 'Atkinson Hyperlegible', 'Amiri', 'Segoe UI', system-ui, sans-serif;
   --f-quran: 'Amiri Quran', 'Amiri', 'Scheherazade New', 'Noto Naskh Arabic', serif;
   --f-arabic: 'Amiri', 'Scheherazade New', 'Noto Naskh Arabic', serif;
 
@@ -131,7 +131,7 @@ p { margin: 0; }
   border-top: 1px solid var(--line);
   padding: 6px max(6px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(6px, env(safe-area-inset-left, 0px));
 }
-.tab { display: grid; justify-items: center; gap: 2px; padding: 6px 0; border: 0; background: none; color: var(--muted); font-size: .68rem; min-width: 0; white-space: nowrap; font-weight: 700; letter-spacing: .02em; border-radius: 12px; text-decoration: none; }
+.tab { display: grid; justify-items: center; align-content: start; gap: 2px; padding: 6px 0; border: 0; background: none; color: var(--muted); font-size: .66rem; line-height: 1.15; text-align: center; min-width: 0; font-weight: 700; letter-spacing: .02em; border-radius: 12px; text-decoration: none; }
 .tab .icon { width: 24px; height: 24px; transition: transform .3s var(--ease); }
 .tab[aria-current="page"] { color: var(--accent); }
 .tab[aria-current="page"] .icon { transform: translateY(-1px) scale(1.08); }
@@ -492,3 +492,32 @@ td .big { font-family: var(--f-display); font-size: 1.4rem; font-weight: 700; co
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* ---------- doa parts, wirid, pairings ---------- */
+.parts { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; counter-reset: part; }
+.part { display: grid; gap: 6px; padding: 12px 0; border-bottom: 1px dashed var(--line); }
+.part:last-child { border-bottom: 0; }
+.part .eyebrow { color: var(--accent); }
+.wirid-launch { background: linear-gradient(135deg, var(--accent-soft), var(--surface)); border-color: color-mix(in oklab, var(--accent) 30%, var(--line)); }
+.wirid-list { margin: 0; padding-left: 1.4em; display: grid; gap: 6px; }
+.wirid-list li { padding: 6px 0; border-bottom: 1px solid var(--line); }
+.wirid-list li > span:first-child { margin-right: 8px; }
+.wirid-list li::marker { color: var(--accent); font-weight: 700; }
+.counter { position: relative; width: 76px; height: 76px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; align-content: center; box-shadow: 0 3px 0 color-mix(in oklab, var(--accent) 60%, #000); touch-action: manipulation; flex: none; }
+.counter:active { transform: translateY(2px); box-shadow: 0 1px 0 color-mix(in oklab, var(--accent) 60%, #000); }
+.counter svg { position: absolute; inset: 4px; width: calc(100% - 8px); height: calc(100% - 8px); transform: rotate(-90deg); }
+.counter circle { fill: none; stroke-width: 3.5; }
+.counter .track { stroke: color-mix(in oklab, var(--accent-ink) 25%, transparent); }
+.counter .val { stroke: var(--accent-ink); stroke-linecap: round; transition: stroke-dashoffset .2s var(--ease); }
+.counter-n { font-family: var(--f-display); font-weight: 700; font-size: 1.5rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.counter-of { font-size: .7rem; font-weight: 700; opacity: .8; }
+.counter-hint { font-size: .85rem; }
+.pair-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.pair-list li { display: grid; gap: 6px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.pair-list li:last-child { border-bottom: 0; padding-bottom: 0; }
+.pair-surahs { display: flex; flex-wrap: wrap; gap: 8px; }
+.pair-r { display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.pair-r em { font-style: normal; font-size: .7rem; font-weight: 700; color: var(--muted); letter-spacing: .06em; }
+.pair-r .chip { padding: 4px 10px; font-size: .8rem; color: var(--accent); }
+.surah-pick { display: grid; gap: 6px; }
+.surah-pick select { height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); padding: 0 12px; font: inherit; font-weight: 700; color: var(--ink); max-width: 100%; }

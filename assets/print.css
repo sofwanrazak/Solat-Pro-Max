@@ -3,7 +3,7 @@
   --ink: #13211e; --muted: #586b66; --line: #d3ddd9; --sunk: #eef2f0; --accent: #0e6e66; --warn: #a35f0c; --bad: #b3372b; --gold: #a87816;
   --fig-skin: #c68b5e; --fig-skin-2: #ad7448; --fig-shirt: #2f5d57; --fig-sleeve: #3b6e67; --fig-trouser: #2b3038; --fig-cap: #f6f3ec; --fig-hair: #221c18; --fig-edge: rgba(10, 20, 18, .28);
   --f-display: 'El Messiri', 'Gill Sans', sans-serif;
-  --f-body: 'Atkinson Hyperlegible', 'Segoe UI', sans-serif;
+  --f-body: 'Atkinson Hyperlegible', 'Amiri', 'Segoe UI', sans-serif;
   --f-quran: 'Amiri Quran', 'Amiri', serif;
   --f-arabic: 'Amiri', serif;
 }
@@ -100,3 +100,5 @@ td b.big { font-family: var(--f-display); font-size: 13pt; color: var(--accent);
 .key { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.6mm; font-size: 8pt; }
 .key div { border: .3mm solid var(--line); border-radius: 1.6mm; padding: 1.2mm 2mm; }
 .key b { font-family: var(--f-arabic); font-size: 12pt; margin-right: 1.6mm; }
+
+.part { display: grid; gap: 1mm; padding: 1.6mm 0; border-top: .3mm dotted var(--line); break-inside: avoid; }

@@ -12,7 +12,9 @@
   const fig = (pose, ov) => { const box = h('div'); SolatFigure.create(box, { pose, overlays: ov || [] }); return box; };
   const page = (...kids) => h('section', { class: 'page' }, kids);
   const head = (eyebrow, title) => [h('span', { class: 'eyebrow' }, eyebrow), h('h2', null, title)];
-  const duaBlock = (d, opts) => h('div', { class: 'block' },
+  const duaBlock = (d, opts) => d.parts ? h('div', { class: 'block' },
+    h('div', { class: 'head' }, h('h3', null, d.title)), d.note && h('p', { class: 'note' }, d.note),
+    d.parts.map((pt) => h('div', { class: 'part' }, h('span', { class: 'eyebrow' }, pt.label), h('p', { class: 'ar', lang: 'ar' }, pt.ar), h('p', { class: 'tr' }, pt.tr), h('p', { class: 'en' }, pt.en), pt.src && h('p', { class: 'src' }, pt.src)))) : h('div', { class: 'block' },
     h('div', { class: 'head' }, h('h3', null, d.title), d.count && h('span', { class: 'count' }, '×' + d.count)),
     h('p', { class: 'ar' + (d.audio ? ' quran' : ''), lang: 'ar' }, d.ar), h('p', { class: 'tr' }, d.tr), h('p', { class: 'en' }, d.en),
     d.note && !(opts && opts.noNote) && h('p', { class: 'note' }, d.note), d.src && h('p', { class: 'src' }, d.src));
@@ -114,11 +116,25 @@
     h('ol', null, D.khushu.map((k) => h('li', null, h('b', null, k.t), h('br'), h('span', { class: 'muted' }, k.d))))));
 
   // After prayer
-  pages.push(page(head('Section 9', 'After the prayer'),
-    ['istighfar', 'antas-salam', 'kursi', 'subhanallah', 'alhamdulillah', 'allahuakbar', 'tahlil', 'ainni'].map((id) => duaBlock(dua(id), { noNote: true }))));
+  const sname = (id) => (D.surahs.find((x) => x.id === id) || {}).name || id;
+  const wlist = (kind, pid) => h('ol', null, D.wirid(kind, pid).map((it) => h('li', null, it.id ? dua(it.id).title : sname(it.surah), it.count > 1 ? ' ×' + it.count : '')));
+  pages.push(page(head('Section 9', 'Wirid and doa after prayer'),
+    h('p', null, 'Wirid is the remembrance after salam; doa is asking Allah, hands raised. Wirid first, then doa. A doa is most likely to be heard “in the last part of the night and after the obligatory prayers” (at-Tirmidhi 3499).'),
+    h('div', { class: 'two' },
+      h('div', null, h('h3', null, 'Short wirid · ~3 min'), h('p', { class: 'src' }, 'What is reported in the hadith'), wlist('short', 'zohor')),
+      h('div', null, h('h3', null, 'Long wirid · ~8 min'), h('p', { class: 'src' }, 'As recited in Malaysian mosques (after Subuh & Maghrib shown)'), wlist('long', 'subuh'))),
+    h('p', { class: 'muted' }, 'After Zohor, Asar and Isyak: tahlil ×3 and no “Allāhumma ajirnā”.'),
+    ['istighfar', 'istighfar-long', 'tahlil-10', 'antas-salam', 'ajirna', 'kursi', 'subhanallah', 'alhamdulillah', 'allahuakbar', 'tahlil', 'ainni'].map((id) => duaBlock(dua(id), { noNote: true })),
+    h('h2', null, 'Doa after prayer'),
+    duaBlock(dua('doa-short')), duaBlock(dua('doa-long'))));
 
   // Surahs
-  pages.push(page(head('Section 10', 'Short surahs for the 1st and 2nd rakaat'),
+  pages.push(page(head('Section 10', 'Surahs for the prayer'),
+    h('h3', null, 'Recommended in prayer'),
+    h('table', null, h('thead', null, h('tr', null, h('th', null, 'Prayer'), h('th', null, 'Surahs by rakaat'), h('th', null, 'Source'))),
+      h('tbody', null, D.pairings.map((pr) => h('tr', null, h('td', null, h('b', null, pr.t)),
+        h('td', null, pr.r.length ? pr.r.map((x, k) => (k + 1) + ': ' + (Array.isArray(x) ? x.map(sname).join(' + ') : sname(x))).join(' · ') : '', pr.note ? [h('br'), h('span', { class: 'muted' }, pr.note)] : null),
+        h('td', { class: 'src' }, pr.src))))),
     D.surahs.filter((s) => !s.rukun).map((s) => h('div', { class: 'block' }, h('h3', null, s.name + ' (' + s.n + ') · ' + s.meaning),
       h('p', { class: 'ar quran', lang: 'ar' }, s.ayat.map((a, i) => a.ar + ' ﴿' + (i + 1).toLocaleString('ar-EG') + '﴾').join(' ')),
       h('p', { class: 'tr' }, s.ayat.map((a, i) => a.tr + ' (' + (i + 1) + ')').join(' ')),
