@@ -30,7 +30,9 @@
   const $ = (sel, ctx) => (ctx || document).querySelector(sel);
 
   const ICONS = {
-    learn: '<path d="M3 5.5C5.5 4 8.5 4 12 6c3.5-2 6.5-2 9-.5V19c-2.5-1.5-5.5-1.5-9 .5-3.5-2-6.5-2-9-.5z"/><path d="M12 6v13.5"/>',
+    learn: '<path d="M2.5 9 12 4.5 21.5 9 12 13.5z"/><path d="M6.5 11v4.5c0 1.6 2.5 3 5.5 3s5.5-1.4 5.5-3V11"/><path d="M21.5 9v5.5"/>',
+    doa: '<path d="M10.5 20.5 6 16c-1-1-1.5-2.2-1.5-3.6V6.5a1.5 1.5 0 0 1 3 0V11"/><path d="M7.5 11V4.8a1.5 1.5 0 0 1 3 0v8.7"/><path d="M13.5 20.5 18 16c1-1 1.5-2.2 1.5-3.6V6.5a1.5 1.5 0 0 0-3 0V11"/><path d="M16.5 11V4.8a1.5 1.5 0 0 0-3 0v8.7"/>',
+    surah: '<path d="M12 7.5c-2-1.6-4.6-2-7.5-1.5v9.5c2.9-.5 5.5-.1 7.5 1.5 2-1.6 4.6-2 7.5-1.5V6c-2.9-.5-5.5-.1-7.5 1.5z"/><path d="M12 7.5V17M6 21l6-4 6 4"/>',
     pray: '<circle cx="15.5" cy="5" r="2"/><path d="M4 20h16"/><path d="M6.5 20c0-4 2-6.5 5-7.5l3.5 3"/><path d="M11.5 12.5 14 9l3.5 2.5"/>',
     library: '<path d="M5 4h4v16H5zM10 4h4v16h-4z"/><path d="m15 5 3.6-.9 3.2 15.5-3.6.9z"/>',
     handbook: '<path d="M6 3h11a1 1 0 0 1 1 1v17l-6.5-3.5L5 21V4a1 1 0 0 1 1-1z"/><path d="M9 8h6M9 11.5h4"/>',
@@ -263,8 +265,9 @@
   // ---------- shell ----------
   const VIEWS = [
     { id: 'learn', label: 'Learn', icon: 'learn' },
-    { id: 'pray', label: 'Pray along', icon: 'pray' },
-    { id: 'library', label: 'Doa & Surah', icon: 'library' },
+    { id: 'pray', label: 'Pray', icon: 'pray' },
+    { id: 'doa', label: 'Doa', icon: 'doa' },
+    { id: 'surah', label: 'Surah', icon: 'surah' },
     { id: 'handbook', label: 'Handbook', icon: 'handbook' },
     { id: 'track', label: 'Track', icon: 'track' },
   ];
@@ -299,7 +302,8 @@
 
   let current = 'learn';
   function route() {
-    const id = (location.hash || '#learn').slice(1);
+    let id = (location.hash || '#learn').slice(1);
+    if (id === 'library') id = 'doa';
     current = VIEWS.some((v) => v.id === id) ? id : 'learn';
     stopAudio();
     document.querySelectorAll('.sheet').forEach((sh) => sh.remove());
@@ -311,7 +315,7 @@
     mainEl.replaceChildren(topbar(), col);
     mainEl.classList.toggle('hide-tr', !S.prefs.tr);
     mainEl.classList.toggle('hide-en', !S.prefs.en);
-    ({ learn: viewLearn, pray: viewPray, library: viewLibrary, handbook: viewHandbook, track: viewTrack })[current](col);
+    ({ learn: viewLearn, pray: viewPray, doa: (c) => viewLibrary(c, 'doa'), surah: (c) => viewLibrary(c, 'surah'), handbook: viewHandbook, track: viewTrack })[current](col);
     window.scrollTo(0, 0);
   }
 
@@ -635,25 +639,32 @@
   }
 
   // ---------- LIBRARY ----------
-  const lib = { q: '', cat: 'All', cloze: {} };
-  function viewLibrary(col) {
-    const cats = ['All', 'Surah', 'In prayer', 'After prayer', 'Wudhu', 'Special'];
-    const items = [
-      ...D.surahs.map((s) => ({ id: 's-' + s.id, kind: 'surah', cat: 'Surah', title: s.name, sub: s.meaning + ' · ' + s.ayat.length + ' verses', ar: s.ayat[0].ar, data: s, hay: (s.name + ' ' + s.meaning + ' ' + s.ayat.map((a) => a.tr + ' ' + a.en).join(' ')).toLowerCase() })),
-      ...D.duas.map((d) => ({ id: 'd-' + d.id, kind: 'dua', cat: d.cat, title: d.title, sub: d.cat + (d.count ? ' · ×' + d.count : ''), ar: d.ar, data: d, hay: (d.title + ' ' + d.tr + ' ' + d.en + ' ' + d.cat).toLowerCase() })),
-    ];
+  const lib = { doa: { q: '', cat: 'All' }, surah: { q: '' }, cloze: {} };
+  const LIB = {
+    doa: { eyebrow: 'Doa collection', title: 'Every doa and dhikr of the prayer', search: 'Search: sujud, forgiveness, qunut…', cats: ['All', 'In prayer', 'After prayer', 'Wudhu', 'Special'] },
+    surah: { eyebrow: 'Surah collection', title: 'Al-Fatihah and the short surahs', search: 'Search: ikhlas, falaq, mercy…', cats: null },
+  };
+  function viewLibrary(col, kind) {
+    const cfg = LIB[kind];
+    const st = lib[kind];
+    const items = kind === 'surah'
+      ? D.surahs.slice().sort((a, b) => a.n - b.n).map((s) => ({ id: 's-' + s.id, kind: 'surah', title: s.name, sub: 'Surah ' + s.n + ' · ' + s.meaning + ' · ' + s.ayat.length + ' verses' + (s.rukun ? ' · a pillar of every rakaat' : ''), ar: s.ayat[0].ar, data: s, hay: (s.name + ' ' + s.meaning + ' ' + s.n + ' ' + s.ayat.map((a) => a.tr + ' ' + a.en).join(' ')).toLowerCase() }))
+      : D.duas.map((d) => ({ id: 'd-' + d.id, kind: 'dua', cat: d.cat, title: d.title, sub: d.cat + (d.count ? ' · ×' + d.count : ''), ar: d.ar, data: d, hay: (d.title + ' ' + d.tr + ' ' + d.en + ' ' + d.cat).toLowerCase() }));
     const listEl = h('div', { class: 'lib' });
-    const search = h('input', { id: 'lib-search', type: 'search', placeholder: 'Search: fatihah, sujud, forgiveness…', value: lib.q, 'aria-label': 'Search doa and surah', oninput: (e) => { lib.q = e.target.value; draw(); } });
-    const chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'Filter' });
-    const drawChips = () => chips.replaceChildren(...cats.map((c) => h('button', { class: 'chip', type: 'button', 'aria-pressed': String(lib.cat === c), onclick: () => { lib.cat = c; drawChips(); draw(); } }, c)));
+    const search = h('input', { id: 'lib-search-' + kind, type: 'search', placeholder: cfg.search, value: st.q, 'aria-label': 'Search the ' + kind + ' collection', oninput: (e) => { st.q = e.target.value; draw(); } });
+    const chips = cfg.cats && h('div', { class: 'chips', role: 'group', 'aria-label': 'Filter' });
+    const drawChips = () => chips && chips.replaceChildren(...cfg.cats.map((c) => h('button', { class: 'chip', type: 'button', 'aria-pressed': String(st.cat === c), onclick: () => { st.cat = c; drawChips(); draw(); } }, c)));
     const tog = (key, text) => h('label', { class: 'toggle' }, h('input', { type: 'checkbox', id: 'pref-' + key, checked: S.prefs[key], onchange: (e) => { S.prefs[key] = e.target.checked; save(); mainEl.classList.toggle('hide-' + key, !e.target.checked); } }), text);
     drawChips();
+    const mastered = items.filter((it) => (S.mastery[it.id] || 0) >= 3).length;
     col.append(
-      h('div', { class: 'sec-head' }, h('div', null, h('span', { class: 'eyebrow' }, 'Library'), h('h2', null, 'Every doa and surah of the prayer')),
+      h('div', { class: 'sec-head' }, h('div', null, h('span', { class: 'eyebrow' }, cfg.eyebrow + ' · ' + items.length + ' · ' + mastered + ' memorised'), h('h2', null, cfg.title)),
         h('div', { class: 'chips' }, tog('tr', 'Transliteration'), tog('en', 'Meaning'))),
       h('div', { class: 'search' }, icon('search'), search),
-      chips,
-      h('p', { class: 'foot-note' }, 'Memorise: each tap hides more words; tap a blank to check yourself. Rate yourself with the stars; three stars means you have it by heart.'),
+      ...[chips].filter(Boolean),
+      h('p', { class: 'foot-note' }, kind === 'surah'
+        ? 'Recite Al-Fatihah in every rakaat, then any surah in the 1st and 2nd. Listen verse by verse; memorise: each tap hides more words. Three stars means you have it by heart.'
+        : 'Memorise: each tap hides more words; tap a blank to check yourself. Rate yourself with the stars; three stars means you have it by heart.'),
       listEl);
 
     function stars(id) {
@@ -680,8 +691,8 @@
       return h('div', { class: 'lib-body' }, acts, content);
     }
     function draw() {
-      const q = lib.q.trim().toLowerCase();
-      const shown = items.filter((it) => (lib.cat === 'All' || it.cat === lib.cat) && (!q || it.hay.includes(q)));
+      const q = st.q.trim().toLowerCase();
+      const shown = items.filter((it) => (!cfg.cats || st.cat === 'All' || it.cat === st.cat) && (!q || it.hay.includes(q)));
       listEl.replaceChildren(...(shown.length ? shown.map((it) => {
         const wrap = h('div');
         const det = h('details', { class: 'lib-item' },
@@ -689,7 +700,7 @@
           wrap);
         det.addEventListener('toggle', () => { if (det.open && !wrap.firstChild) wrap.append(itemBody(it, wrap)); if (!det.open) stopAudio(); });
         return det;
-      }) : [h('p', { class: 'muted' }, 'Nothing matches “' + lib.q + '”. Try a shorter word.')]));
+      }) : [h('p', { class: 'muted' }, 'Nothing matches “' + st.q + '”. Try a shorter word.')]));
     }
     draw();
   }

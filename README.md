@@ -21,7 +21,9 @@ The app is the main product. The PDF is generated from **the same content files*
 
 - **Learn**: 14 lessons in 4 units, from *why solat matters* to *khushu'*. 63 questions in 4 formats: multiple choice, true/false, put in order, pillar-or-sunnah sorting.
 - **Pray along**: a step-by-step guide for each of the 5 prayers (22 to 35 steps), built from the rakaat count. It covers qunut in Subuh, the first Tashahhud, and the brief rest before standing (jalsah istirahah). Every step shows the animated posture, the tag (pillar / sunnah ab'adh / sunnah), what to say, body cues, mistakes to avoid, and whether to recite aloud or silently.
-- **Doa & Surah**: 28 doas and dhikr, plus Al-Fatihah and 11 short surahs. Each has Arabic with full vowel marks, transliteration, meaning and source. Includes verse-by-verse recitation (al-Husary), a memorise mode that hides more words each round, and self-rated mastery stars.
+- **Doa**: 28 doas and dhikr, filtered by when they're used: in prayer, after prayer, wudhu, special.
+- **Surah**: Al-Fatihah and 11 short surahs in mushaf order, with verse-by-verse recitation (al-Husary) that highlights each verse as it plays.
+- Both collections give every item Arabic with full vowel marks, transliteration, meaning and source, plus a memorise mode that hides more words each round and self-rated mastery stars.
 - **Handbook**: times and rakaat, conditions, the 13 pillars, sunnah ab'adh and hai'ah, wudhu, what breaks wudhu and the prayer, sujud sahwi, the 12 common mistakes, 10 khushu' habits, notes for women, and a transliteration key.
 - **Track**: log each prayer (prayed / on time / jama'ah), a 12-week heatmap, a tasbih counter (33·33·33·1) with haptics, and 14 badges.
 - **Posture figures**: a side-view man in baju melayu and kopiah, facing the qiblah, drawn with real proportions (about 7.4 heads tall). Poses use inverse kinematics, so limbs keep their length while animating. Teaching overlays show where to look in qiyam, the flat back in ruku', the 7 contact points in sujud, the raised finger in Tashahhud, and the turn of the salam.
